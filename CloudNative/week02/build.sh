@@ -1,0 +1,1 @@
+docker build -t smartyhero/httpserver:0.0.1 .

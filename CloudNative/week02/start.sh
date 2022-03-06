@@ -1,0 +1,1 @@
+docker container run -d --name httpserver smartyhero/httpserver:0.0.1

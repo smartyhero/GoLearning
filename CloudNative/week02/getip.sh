@@ -1,0 +1,1 @@
+nsenter -t $(docker container inspect httpserver -f "{{.State.Pid}}") -n ip a
