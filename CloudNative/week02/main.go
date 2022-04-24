@@ -2,9 +2,15 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
+
+	"httpserver/metrics"
 	"strings"
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func healthz(w http.ResponseWriter, r *http.Request) {
@@ -50,14 +56,23 @@ func getClientIp(r *http.Request) (ip string) {
 	return
 }
 
-func main() {
-	mux := http.NewServeMux()
+func delay(w http.ResponseWriter, r *http.Request) {
+	timer := metrics.NewTimer()
+	defer timer.ObserveTotal()
+	randTime := rand.Intn(3000)
+	time.Sleep(time.Millisecond * time.Duration(randTime))
+	w.Write([]byte(fmt.Sprintf("I have delay %d", randTime)))
+}
 
+func main() {
+	metrics.Register()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/delay", delay)
 	mux.HandleFunc("/", rootFunc)
 
 	// 当访问 localhost/healthz 时，应返回 200
 	mux.HandleFunc("/healthz", healthz)
-
+	mux.Handle("/metrics", promhttp.Handler())
 	err := http.ListenAndServe("0.0.0.0:80", mux)
 	if err != nil {
 		fmt.Printf("Start Server Error: %v\n", err)
